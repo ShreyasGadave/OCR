@@ -1,0 +1,50 @@
+import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export async function POST(req: Request) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "GEMINI_API_KEY not set" }, { status: 500 });
+  }
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+  });
+
+  // Read uploaded file
+  const form = await req.formData();
+  const file = form.get("file") as File;
+
+  if (!file) {
+    return NextResponse.json({ error: "No file received" }, { status: 400 });
+  }
+
+  // Convert file → base64
+  const arrayBuffer = await file.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString("base64");
+
+  // OCR Prompt
+  const prompt = `
+Extract ALL the text and structured fields from this document in JSON format.
+
+Return JSON only.
+  `;
+
+  // Gemini OCR request
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        data: base64,
+        mimeType: file.type,
+      },
+    },
+    prompt,
+  ]);
+
+  const text = result.response.text();
+  console.log("this is text ocr :",text);
+  
+  
+
+  return NextResponse.json({ ocr: text });
+}

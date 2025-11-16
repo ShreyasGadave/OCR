@@ -1,4 +1,4 @@
-"use client"; // This component must be a client component
+"use client";
 
 import {
   ImageKitAbortError,
@@ -8,87 +8,69 @@ import {
   upload,
 } from "@imagekit/next";
 import { useRef, useState } from "react";
+import Toaster, { ToasterRef } from "@/components/ui/toast";
 
-// UploadExample component demonstrates file uploading using ImageKit's Next.js SDK.
 const UploadExample = () => {
-  // State to keep track of the current upload progress (percentage)
   const [progress, setProgress] = useState(0);
-
-  // Create a ref for the file input element to access its files easily
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Create an AbortController instance to provide an option to cancel the upload if needed.
   const abortController = new AbortController();
+  const toasterRef = useRef<ToasterRef>(null);
 
-  /**
-   * Authenticates and retrieves the necessary upload credentials from the server.
-   *
-   * This function calls the authentication API endpoint to receive upload parameters like signature,
-   * expire time, token, and publicKey.
-   *
-   * @returns {Promise<{signature: string, expire: string, token: string, publicKey: string}>} The authentication parameters.
-   * @throws {Error} Throws an error if the authentication request fails.
-   */
   const authenticator = async () => {
     try {
-      // Perform the request to the upload authentication endpoint.
       const response = await fetch("/api/upload-auth");
       if (!response.ok) {
-        // If the server response is not successful, extract the error text for debugging.
         const errorText = await response.text();
         throw new Error(
           `Request failed with status ${response.status}: ${errorText}`
         );
       }
-
-      // Parse and destructure the response JSON for upload credentials.
-      const data = await response.json();
-      const { signature, expire, token, publicKey } = data;
-      return { signature, expire, token, publicKey };
+      return await response.json();
     } catch (error) {
-      // Log the original error for debugging before rethrowing a new error.
       console.error("Authentication error:", error);
       throw new Error("Authentication request failed");
     }
   };
 
-  /**
-   * Handles the file upload process.
-   *
-   * This function:
-   * - Validates file selection.
-   * - Retrieves upload authentication credentials.
-   * - Initiates the file upload via the ImageKit SDK.
-   * - Updates the upload progress.
-   * - Catches and processes errors accordingly.
-   */
+  const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+
+    const files = event.dataTransfer.files;
+    if (!files || !files.length) return;
+
+    fileInputRef.current!.files = files;
+    toasterRef.current?.show({
+      title: "File Ready 📄",
+      message: `${files[0].name} is ready for upload!`,
+      variant: "default",
+      position: "bottom-right",
+    });
+  };
+
   const handleUpload = async () => {
-    const fileInput = fileInputRef.current;
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      alert("Please select a file to upload");
+    const input = fileInputRef.current;
+    if (!input?.files?.[0]) {
+      toasterRef.current?.show({
+        title: "Upload Failed ❌",
+        message: "Please select a file to upload",
+        variant: "error",
+        position: "bottom-right",
+        duration: 5000,
+      });
       return;
     }
 
-    const file = fileInput.files[0];
-
-    // 1️⃣ RUN OCR FIRST
+    const file = input.files[0];
     const formData = new FormData();
     formData.append("file", file);
 
-    const ocrRes = await fetch("/api/ocr", {
-      method: "POST",
-      body: formData,
-    });
-
-    const { ocr } = await ocrRes.json();
-    console.log("OCR Result:", ocr);
-
-    // 2️⃣ THEN upload to ImageKit
     let authParams;
     try {
       authParams = await authenticator();
-    } catch (err) {
-      console.error("Failed to authenticate:", err);
+    } catch (error) {
+      console.error("Authentication failed:", error);
       return;
     }
 
@@ -103,29 +85,81 @@ const UploadExample = () => {
         file,
         fileName: file.name,
         onProgress: (event) => {
-          setProgress((event.loaded / event.total) * 100);
+          setProgress((event.loaded / event.total) * 40);
         },
         abortSignal: abortController.signal,
       });
 
       console.log("ImageKit Upload:", uploadResponse);
+      formData.append("uploadResponse", JSON.stringify(uploadResponse));
+
+      const ocrRes = await fetch("/api/ocr", {
+        method: "POST",
+        body: formData,
+      });
+
+      setProgress(75);
+      setTimeout(() => setProgress(100), 500);
+
+      const { extracted } = await ocrRes.json();
+      toasterRef.current?.show({
+        title: "Upload Successful 🎉",
+        message: "Image uploaded & OCR completed successfully!",
+        variant: "success",
+        position: "bottom-right",
+        highlightTitle: true,
+        duration: 5000,
+      });
+
+      console.log("OCR Result:", extracted);
     } catch (error) {
+      toasterRef.current?.show({
+        title: "Upload Failed ❌",
+        message: "Something went wrong. Please try again.",
+        variant: "error",
+        position: "bottom-right",
+        duration: 5000,
+      });
       console.error(error);
     }
   };
 
   return (
-    <>
-      {/* File input element using React ref */}
-      <input type="file" ref={fileInputRef} />
-      {/* Button to trigger the upload process */}
-      <button type="button" onClick={handleUpload}>
-        Upload file
+    <div className="max-w-xl mx-auto p-6 space-y-6">
+      <div
+        onDrop={handleFileDrop}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition ${
+          isDragging ? "border-green-500 bg-green-50" : "border-gray-400"
+        }`}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input ref={fileInputRef} type="file" className="hidden" />
+        <p className="text-gray-600">
+          {isDragging ? "Drop it like it's hot 🔥" : "Drag & drop a file or click to browse"}
+        </p>
+      </div>
+
+      <button
+        onClick={handleUpload}
+        className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow transition"
+      >
+        Upload File
       </button>
-      <br />
-      {/* Display the current upload progress */}
-      Upload progress: <progress value={progress} max={100}></progress>
-    </>
+
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div
+          className="bg-green-500 h-2 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+
+      <Toaster ref={toasterRef} />
+    </div>
   );
 };
 

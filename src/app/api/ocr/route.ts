@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     // Read uploaded file
     const form = await req.formData();
     const file = form.get("file") as File;
-
+    const uploadResponse = form.get("uploadResponse");
     if (!file) {
       return NextResponse.json({ error: "No file received" }, { status: 400 });
     }
@@ -53,8 +53,7 @@ Return JSON only.
 
     try {
       parsedJSON = JSON.parse(text);
-      console.log("this is data :",parsedJSON);
-      
+      console.log("this is data :", parsedJSON);
     } catch (err) {
       return NextResponse.json(
         { error: "OCR returned invalid JSON", raw: text },
@@ -69,7 +68,7 @@ Return JSON only.
 
     const saved = await prisma.userOCR.create({
       data: {
-        imageUrl: "",
+        imageUrl: JSON.stringify(uploadResponse),
         rawData: JSON.stringify(parsedJSON),
       },
     });

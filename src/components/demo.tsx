@@ -19,7 +19,7 @@ export function SidebarDemo() {
   const links = [
     {
       label: "Dashboard",
-      href: "#",
+      href: "/ocr",
       icon: (
         <LayoutDashboard
           size={32}

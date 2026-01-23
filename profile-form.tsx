@@ -5,11 +5,9 @@ import { useState } from "react";
 
 export default function ProfileForm() {
   const [name, setName] = useState("");
-  const [skill, setSkill] = useState(0);
-  const [age, setage] = useState(0);
-  const [isActive, setIsActive] = useState(false);
+  const [email, setemail] = useState("")
 
-  const submit = trpc.User.submit.useMutation();
+  const submit = trpc.shreya.submitProfile.useMutation();
   
   return (
     <div className="space-y-4">
@@ -23,31 +21,14 @@ export default function ProfileForm() {
       <input
         className="border p-2"
         placeholder="Enter skill"
-        value={skill}
-        type="number"
-        onChange={(e) => setSkill(Number(e.target.value))}
+        value={email}
+        type="text"
+        onChange={(e) => setemail((e.target.value))}
       />
-
-      <input
-        className="border p-2"
-        placeholder="Enter skill"
-        value={age}
-        type="number"
-        onChange={(e) => setage(Number(e.target.value))}
-      />
-
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-        />
-        Active User
-      </label>
 
       <button
         className="bg-blue-500 text-white px-4 py-2"
-        onClick={() => submit.mutate({ name, skill, age,isActive })}
+        onClick={() => submit.mutate({ name,email })}
       >
         Submit
       </button>

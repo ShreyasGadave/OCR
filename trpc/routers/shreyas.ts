@@ -1,29 +1,26 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { baseProcedure, createTRPCRouter } from "../init"; 
+import { prisma } from "@/db/client";
 
 export const shreyasRouter = createTRPCRouter({
-  getData: baseProcedure.query(() => {
-    return {
-      name: "Shreyas Anil Gadave",
-      skills: ["React", "Next.js", "Node.js"],
-    };
-  }),
-
   submitProfile: baseProcedure
     .input(
       z.object({
         name: z.string(),
-        skill: z.number(),
-        age: z.number(),
-        isActive: z.boolean(),
-      })
+        email:z.string(),
+      }),
     )
-    .mutation(({ input }) => {
+    .mutation( async ({ input }) => {
       console.log("Received from client:", input);
-
+      const user = await prisma.user.create({
+        data: {
+          name: input.name,
+          email: input.email,
+        },
+      });
       return {
         success: true,
-        message: `Saved ${input.name} with skill ${input.skill} ${input.isActive} :${input.age}`,
+        message: `Saved ${input.name} with skill ${input.name}`,
       };
     }),
 });

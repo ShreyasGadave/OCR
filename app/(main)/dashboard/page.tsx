@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -25,16 +26,75 @@ import { useState } from "react";
 import UploadExample from "@/components/FileDropzone";
 
 export default function Page() {
-  const [dropBox, setDropbox] = useState(false)
+  const [dropBox, setDropbox] = useState(false);
+
+  const statsCards = [
+    {
+      title: "Active Policies",
+      value: 420,
+      description: "Don't need attention",
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+      Icon: CheckCircle,
+    },
+    {
+      title: "Expiring Soon",
+      value: 15,
+      description: "Re-request required",
+      iconBg: "bg-red-100",
+      iconColor: "text-red-600",
+      Icon: AlertCircle,
+    },
+    {
+      title: "Need Validation",
+      value: 30,
+      description: "Validation required",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      Icon: AlertTriangle,
+    },
+    {
+      title: "Recently Expired",
+      value: 7,
+      description: "Assign responsible",
+      iconBg: "bg-gray-100",
+      iconColor: "text-gray-600",
+      Icon: Info,
+    },
+  ];
+
+  useEffect(() => {
+    if (dropBox) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [dropBox]);
+
   return (
     <div className="min-h-screen dark:bg-black ">
-
-{dropBox ?  <UploadExample/> : "" }
+      {dropBox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setDropbox(false)} // close on backdrop click
+        >
+          <div
+            className="relative h-[70%] w-[70%]"
+            onClick={(e) => e.stopPropagation()} // prevent close when clicking inside
+          >
+            <UploadExample />
+          </div>
+        </div>
+      )}
 
       <div className="max-w-400 mx-auto space-y-6">
         {/* TOP BAR */}
         <div className="flex justify-between pt-3 items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
             + New Policy
           </Button>
@@ -43,109 +103,45 @@ export default function Page() {
         <div className="flex w-full gap-4">
           <div className="w-2/3">
             <div className="grid grid-cols-4 gap-4">
-              <Card className="bg-white shadow-sm  rounded-xl">
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pt-3">
-                  <div className="">
-                    <div className="w-10 h-10 bg-green-100 rounded-2xl flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    </div>
-                    <CardTitle className="text-sm  mt-2 font-semibold text-gray-600 w-full">
-                      Active Policies
-                    </CardTitle>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-100  rounded-2xl flex items-center justify-center">
-                    <ArrowUpRight
-                      size={56}
-                      strokeWidth={1.5}
-                      className="w-5 h-5  text-gray-600"
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="text-4xl font-medium text-gray-900">420</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Don't need attention
-                  </p>
-                </CardContent>
-              </Card>
+              {statsCards.map((card, index) => {
+                const IconComponent = card.Icon;
 
-              <Card className="bg-white shadow-sm rounded-xl">
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pt-3">
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center">
-                      <AlertCircle className="w-5 h-5 text-red-600" />
-                    </div>
-                    <CardTitle className="text-sm mt-2 font-semibold text-gray-600">
-                      Expiring Soon
-                    </CardTitle>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-100  rounded-2xl flex items-center justify-center">
-                    <ArrowUpRight
-                      size={56}
-                      strokeWidth={1.5}
-                      className="w-5 h-5  text-gray-600"
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="text-4xl font-medium text-gray-900">15</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Re-request required
-                  </p>
-                </CardContent>
-              </Card>
+                return (
+                  <Card key={index} className="bg-white dark:bg-gray-300 shadow-sm rounded-xl">
+                    <CardHeader className="flex flex-row items-start justify-between pb-2 pt-3">
+                      <div>
+                        <div
+                          className={`w-10 h-10 ${card.iconBg} rounded-2xl flex items-center justify-center`}
+                        >
+                          <IconComponent
+                            className={`w-5 h-5 ${card.iconColor}`}
+                          />
+                        </div>
 
-              <Card className="bg-white shadow-sm rounded-xl">
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pt-3">
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center">
-                      <AlertTriangle className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <CardTitle className="text-sm mt-2 font-semibold text-gray-600 w-full">
-                      Need Validation
-                    </CardTitle>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-100  rounded-2xl flex items-center justify-center">
-                    <ArrowUpRight
-                      size={56}
-                      strokeWidth={1.5}
-                      className="w-5 h-5  text-gray-600"
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="text-4xl font-medium text-gray-900">30</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Validation required
-                  </p>
-                </CardContent>
-              </Card>
+                        <CardTitle className="text-sm mt-2 font-semibold text-gray-600">
+                          {card.title}
+                        </CardTitle>
+                      </div>
 
-              <Card className="bg-white shadow-sm rounded-xl">
-                <CardHeader className="flex flex-row items-start justify-between pb-2 pt-3">
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-2xl flex items-center justify-center">
-                      <Info className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <CardTitle className="text-sm mt-2 font-semibold text-gray-600">
-                      Recently Expired
-                    </CardTitle>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-100  rounded-2xl flex items-center justify-center">
-                    <ArrowUpRight
-                      size={56}
-                      strokeWidth={1.5}
-                      className="w-5 h-5  text-gray-600"
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="text-4xl font-medium text-gray-900">7</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Assign responsible
-                  </p>
-                </CardContent>
-              </Card>
+                      <div className="w-10 h-10 bg-gray-100 rounded-2xl flex items-center justify-center">
+                        <ArrowUpRight
+                          strokeWidth={1.5}
+                          className="w-5 h-5 text-gray-600"
+                        />
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pb-3">
+                      <div className="text-4xl font-medium text-gray-900">
+                        {card.value}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {card.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
             <Card className="col-span-2 mt-4 bg-white shadow-sm border border-gray-200 rounded-xl">
               <CardHeader className="border-b border-gray-200 ">
@@ -166,7 +162,10 @@ export default function Page() {
               <CardContent className="pt-4">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex gap-2">
-                    <Button onClick={() => setDropbox(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <Button
+                      onClick={() => setDropbox(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                    >
                       <Download className="w-4 h-4" />
                       Import
                     </Button>
@@ -290,7 +289,7 @@ export default function Page() {
                       statusColor: "bg-green-100 text-green-700",
                       checked: true,
                     },
-                     {
+                    {
                       name: "Kevin M.",
                       id: "#35699",
                       exp: "in 12 days",
@@ -394,7 +393,7 @@ export default function Page() {
                     policies: "65 policies",
                     renewal: "1 policies",
                     role: "Broker",
-                  }
+                  },
                 ].map((person) => (
                   <div
                     key={person.name}

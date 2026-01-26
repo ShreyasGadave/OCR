@@ -28,7 +28,7 @@ export const shreyasRouter = createTRPCRouter({
           message: `Saved ${input.name} successfully`,
           data: user,
         };
-      } catch (error) {
+      } catch (error:any) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
             throw new TRPCError({

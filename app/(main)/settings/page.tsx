@@ -30,7 +30,7 @@ export default function Page() {
       <button
         onClick={() => setActiveTab(id)}
         className={`relative group flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 overflow-hidden
-          ${active ? "bg-gradient-to-r from-sky-50 to-blue-50 text-sky-700 shadow-sm" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+          ${active ? "bg-linear-to-r from-sky-50 to-blue-50 text-sky-700 shadow-sm" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
         `}
       >
         <span

@@ -12,13 +12,45 @@ datasource db {
   provider = "postgresql"
 }
 
-
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  mobile    String
-  password  String
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  mobile   String
+  password String
+
+  bills Bill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bill {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  billDate DateTime
+  dueDate  DateTime
+
+  billNumber String @unique
+  billPeriod Int
+
+  accountHolder  String
+  consumerNumber BigInt
+
+  bu         Int
+  pc         Int
+  disconnTag Int
+  billMonth  Int
+
+  dtcCode Int
+
+  amountBeforeNov30          Int
+  amountBetweenNov30AndJan20 Int
+  amountAfterJan20           Int
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

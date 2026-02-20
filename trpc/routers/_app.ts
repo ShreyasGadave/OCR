@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { file, z } from "zod";
 import { baseProcedure, createTRPCRouter } from "../init";
 import { shreyasRouter } from "./shreyas";
 import { UserRouter } from "./user";
@@ -9,6 +9,7 @@ export const appRouter = createTRPCRouter({
     .input(
       z.object({
         text: z.string(),
+        file: z.file(),
       })
     )
     .query(async (opts) => {

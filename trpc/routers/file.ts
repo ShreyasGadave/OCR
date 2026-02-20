@@ -3,32 +3,39 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import { prisma } from "@/db/client";
 import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
+import { inngest } from "@/inngest/client"; // ✅ add this
 
 export const shreyasRouter = createTRPCRouter({
   submitProfile: baseProcedure
     .input(
       z.object({
-        name: z.string(),
-        email: z.string(),
-      }),
+        userID:z
+        file: z.file(), // file URL (Cloudinary/S3/etc)
+      })
     )
-
-    
     .mutation(async ({ input }) => {
       try {
+        // ✅ Create user
         const user = await prisma.user.create({
           data: {
-            name: input.name,
-            email: input.email,
+            file: input.file
+          },
+        });
+
+        // ✅ 🔥 Trigger Inngest OCR Function
+        await inngest.send({
+          name: "ocr/process.file",
+          data: {
+            file: input.file,
           },
         });
 
         return {
           success: true,
-          message: `Saved ${input.name} successfully`,
+          message: `Saved successfully`,
           data: user,
         };
-      } catch (error:any) {
+      } catch (error: any) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
             throw new TRPCError({

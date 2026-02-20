@@ -2,39 +2,41 @@
 
 import React, { useState } from "react";
 import { getImageKitAuth, uploadToImageKit } from "@/lib/imagekit";
-import { extractTextFromImage } from  "@/lib/gemini"
-import { toBase64 } from "@/utils/toBase64";
+import { trpc } from "@/trpc/client"; // ✅ adjust path to your trpc client
 
 const FileDropzone: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-  const [ocrText, setOcrText] = useState("");
 
-  const uploadAndOCR = async () => {
+  const submitProfile = trpc.shreya.submitProfile.useMutation({
+    onSuccess: (data) => {
+      console.log("Profile saved:", data);
+    },
+    onError: (err) => {
+      console.error("tRPC error:", err);
+      alert(err.message);
+    },
+  });
+
+  const uploadAndSubmit = async () => {
     if (!file) return;
     setLoading(true);
-    
+
     try {
+      // STEP 1 — Upload to ImageKit
       const auth = await getImageKitAuth();
       const uploadData = await uploadToImageKit(file, auth);
       setImageUrl(uploadData.url);
 
-      const base64 = await toBase64(file);
-      const text = await extractTextFromImage(base64, file.type);
-      setOcrText(text);
-
-      await fetch("/api/save-ocr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrl: uploadData.url,
-          text,
-        }),
+      // STEP 2 — Send fileUrl + user info to tRPC
+      await submitProfile.mutateAsync({
+        userId: '697885df0968862c9b410900', // 🔁 replace with real user email
+        fileUrl: uploadData.url,
       });
     } catch (err) {
       console.error(err);
-      alert("Upload or OCR failed");
+      alert("Upload or save failed");
     } finally {
       setLoading(false);
     }
@@ -48,12 +50,11 @@ const FileDropzone: React.FC = () => {
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
       />
 
-      <button onClick={uploadAndOCR} disabled={loading}>
-        {loading ? "Processing..." : "Upload & OCR"}
+      <button onClick={uploadAndSubmit} disabled={loading || submitProfile.isPending}>
+        {loading || submitProfile.isPending ? "Processing..." : "Upload & Save"}
       </button>
 
       {imageUrl && <img src={imageUrl} width={200} />}
-      {ocrText && <pre>{ocrText}</pre>}
     </div>
   );
 };
